@@ -2,6 +2,7 @@ package edu.wmdd.sqlite_example;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -9,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+       // Log.d("thetagis ", TAG);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -67,24 +70,59 @@ public class MainActivity extends AppCompatActivity {
                 android.R.layout.simple_dropdown_item_1line, areas);
 
         tv.setAdapter(areaAdapter);
+
+
+        ListView lv = findViewById(R.id.lv);
+
+        ArrayList<String> operators = new ArrayList<String>();
+        ArrayAdapter<String> ad = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, operators);
+
         tv.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedArea = ((TextView) view).getText().toString();
                 Cursor cursor1 = db.rawQuery("SELECT operator FROM issues WHERE area = ?", new String[]{selectedArea});
-                ArrayList<String> operators = new ArrayList<>();
+                operators.clear();
                 while (cursor1.moveToNext()) {
+
                     String operator = cursor1.getString(0);
                     operators.add(operator);
-                    Log.d(TAG, operator);
+
+
+//                    operators.clear();
                 }
 
-                TextView textView = findViewById(R.id.textView);
-                textView.setText(operators.stream().reduce("", (s, s2) -> s + "\n" + s2));
+                lv.setAdapter(ad);
             }
+
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String selectedFromList = (String) lv.getItemAtPosition(position);
+
+                Cursor cursor1 = db.rawQuery("SELECT businessUrl FROM issues WHERE operator = ?", new String[]{selectedFromList});
+
+                while (cursor1.moveToNext()) {
+                    String link = cursor1.getString(0);
+                    String url = link.substring(4);
+                    Log.d("the url is", url);
+
+
+
+                Intent i = new Intent(MainActivity.this, wview.class);
+                i.putExtra("link", url);
+                startActivity(i);
+
+                }
+                cursor.close();
+
 
             }
         });
